@@ -3,6 +3,59 @@
 #include "http_connection.h"
 #define PORT 11451
 
+void registerRouters(Router& router) {
+    router.get("/echo/:content",[](Request& req, Response& res) {
+        std::string content = req.params.at("content");
+        std::cout << content << std::endl;
+        res.headers["Content-Type"] = "text/plain";
+        res.body = content;
+        res.status = 200;
+    });
+
+    router.get("/", [](Request& req, Response& res) {
+        res.status = 200;
+        res.headers["Content-Type"] = "text/html";
+        res.headers["Server"] = "Toy Tcp Server/0.1";
+        res.body = "<html> \
+             <head><title>Toy Cpp Server</title></head> \
+             <body> \
+            <center><h1>Toy Cpp Server</h1></center> \
+             <hr><center>BoranStars</center> \
+             </body> \
+             </html>";
+    });
+
+    router.get("/user-agent",[](Request& req, Response& res) {
+        res.status = 200;
+        res.headers["Content-Type"] = "text/plain";
+        res.body = req.headers["User-Agent"];
+    });
+
+    router.get("/ys",[](Request& req, Response& res) {
+        res.status = 302;
+        res.headers["Location"] = "https://www.yuanshen.com/";
+
+    });
+
+    router.get("/foo/bar",[](Request& req, Response& res) {
+        res.status = 200;
+        res.headers["Content-Type"] = "text/plain";
+        res.body = "foo/bar!";
+    });
+
+    router.get("/file/:*filepath",[](Request& req, Response& res) {
+        res.status = 200;
+        res.headers["Content-Type"] = "text/plain";
+        res.body = req.params.at("filepath");
+    });
+
+    router.get("/static/*",[](Request& req, Response& res) {
+        res.status = 200;
+        res.headers["Content-Type"] = "text/plain";
+        res.body = req.params.at("wildcard");
+    });
+}
+
 int main() {
     // Flush after every std::cout / std::cerr
     std::cout << std::unitbuf;
@@ -43,38 +96,7 @@ int main() {
     socklen_t client_addr_len = sizeof(client_addr);
 
     Router router;
-    router.get("/echo/:content",[](Request& req, Response& res) {
-        std::string content = req.params.at("content");
-        std::cout << content << std::endl;
-        res.headers["Content-Type"] = "text/plain";
-        res.body = content;
-        res.status = 200;
-    });
-
-    router.get("/", [](Request& req, Response& res) {
-        res.status = 200;
-        res.headers["Content-Type"] = "text/html";
-        res.headers["Server"] = "Toy Tcp Server/0.1";
-        res.body = "<html> \
-             <head><title>Toy Cpp Server</title></head> \
-             <body> \
-            <center><h1>Toy Cpp Server</h1></center> \
-             <hr><center>BoranStars</center> \
-             </body> \
-             </html>";
-    });
-
-    router.get("/user-agent",[](Request& req, Response& res) {
-        res.status = 200;
-        res.headers["Content-Type"] = "text/plain";
-        res.body = req.headers["User-Agent"];
-    });
-
-    router.get("/ys",[](Request& req, Response& res) {
-        res.status = 302;
-        res.headers["Location"] = "https://www.yuanshen.com/";
-
-    });
+    registerRouters(router);
 
 
     std::cout << "Waiting for a client to connect...\n";

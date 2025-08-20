@@ -5,13 +5,16 @@
 #include "router.h"
 
 #include <iostream>
-#include <utility>
+
 
 Router::Router() = default;
 
 void Router::registerRoute(const std::string &path, const std::string &method, RouterHandler handler) {
-    if (path.find(':') != std::string::npos) {
-        // 为动态路由格式，如/echo/:content
+    if (path.empty() || path.at(0) != '/') {
+        throw std::invalid_argument("path must start with / !:"+ path);
+    }
+    if (path.find(':') != std::string::npos || path.find('*') != std::string::npos) {
+        // 为动态路由格式，如/echo/:content,或者/static/*
         auto [regexPattern, paramNames] = patternToReg(path);
 
         // DynamicRoute dynamicRoute {handler,paramNames,regexPattern};
@@ -20,6 +23,9 @@ void Router::registerRoute(const std::string &path, const std::string &method, R
             std::move(paramNames),
             std::move(regexPattern)
         );
+
+
+
     } else {
         // 静态路由
         routers_[path][method] = std::move(handler);
@@ -78,24 +84,39 @@ void Router::get(const std::string &path, RouterHandler handler) {
 
 ParamRegPairs Router::patternToReg(const std::string &routePattern) {
     std::vector<std::string> paramNames;
-    std::string regexPattern = "^/";
+    // 检查路由模式是否以斜杠开头
+    if (routePattern.empty() || routePattern.at(0) != '/') {
+        throw std::invalid_argument("Route pattern must start with '/': " + routePattern);
+    }
+    std::string regexPattern = "^";
 
     std::istringstream istream(routePattern);
     std::string segment;
     bool first = true;
-    // routePattern可能是这样的形式：/userid/:id/postid/:postid，/echo/:content
+    // routePattern可能是这样的形式：/userid/:id/postid/:postid，/echo/:content,/file/:*filepath
     while (std::getline(istream, segment,'/')) {
         if (segment.empty()) {
             continue; // 空段
         }
         if (segment.at(0) == ':') {
-            // 参数段，如 :content
-            paramNames.emplace_back(segment.substr(1));
-            regexPattern += "/([^/]+)";
+            // 参数段，如 :content,:*filepath
+            if (segment.size() > 1 && segment.at(1) == '*') {
+                paramNames.push_back(segment.substr(2)); // 去掉":*"
+                regexPattern += "/(.+)"; // 匹配任意字符（包括斜杠）
+            } else {
+                paramNames.emplace_back(segment.substr(1));
+                regexPattern += "/([^/]+)";
+            }
+        }
+        else if (segment == "*") {
+            // 匿名通配符,匹配所有路径，但是调用的时候参数为wildcard
+
+            paramNames.emplace_back("wildcard");
+            regexPattern += "/(.+)";
 
         } else {
             // 静态段，如echo
-            if (first) {
+            if (0 && first) {
                 // 第一个段不需要前置斜杠（因为 regexPattern 以 ^ 开头）
                 regexPattern += segment;
                 first = false;
