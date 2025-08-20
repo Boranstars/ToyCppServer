@@ -8,6 +8,27 @@ Buffer::Buffer() :read_pos_(0),write_pos_(0){
     buffer_.reserve(BUFSIZE);
 }
 
+Buffer::Buffer(Buffer &&other) noexcept :
+    read_pos_(other.read_pos_),
+    write_pos_(other.write_pos_),
+    buffer_(std::move(other.buffer_)) {
+
+    other.read_pos_ = 0;
+    other.write_pos_ = 0;
+}
+
+Buffer & Buffer::operator=(Buffer &&other) noexcept {
+    if (this != &other) {
+        read_pos_ = other.read_pos_;
+        write_pos_ = other.write_pos_;
+        buffer_ = std::move(other.buffer_);
+
+        other.read_pos_ = 0;
+        other.write_pos_ = 0;
+    }
+    return *this;
+}
+
 void Buffer::append(const char *data, const size_t len) {
     buffer_.insert(buffer_.end(), data, data + len);
 }

@@ -16,6 +16,10 @@ private:
 public:
     Buffer();
     ~Buffer() = default;
+    Buffer(const Buffer &) = delete;
+    Buffer &operator=(const Buffer &) = delete;
+    Buffer(Buffer && other) noexcept;
+    Buffer &operator=(Buffer && other) noexcept;
 
 public:
     void append(const char* data, size_t len);

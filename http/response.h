@@ -15,6 +15,7 @@ struct Response {
     std::string body;
     static const std::map<int, std::string> status_texts;
     std::string generateResponse();
+    void clear();
 };
 const Response okResponse {
     200,

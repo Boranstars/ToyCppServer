@@ -30,7 +30,7 @@ class Router {
     ~Router() = default;
 
     void registerRoute(const std::string& path,const std::string& method, RouterHandler handler);
-    HandlerReturn getHandler(const std::string& method, const std::string& path);
+    [[nodiscard]] HandlerReturn getHandler(const std::string& method, const std::string& path) const;
 
     static const RouterHandler methodNotAllowedHandler_;
 

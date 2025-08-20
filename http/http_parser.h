@@ -15,7 +15,7 @@ struct Request {
     std::unordered_map<std::string, std::string> headers;
     std::string body;
     std::unordered_map<std::string, std::string> params;
-    void init () {
+    void clear () {
         method = "";
         uri = "";
         version = "";

@@ -7,9 +7,7 @@
 #include <iostream>
 #include <utility>
 
-Router::Router() {
-
-}
+Router::Router() = default;
 
 void Router::registerRoute(const std::string &path, const std::string &method, RouterHandler handler) {
     if (path.find(':') != std::string::npos) {
@@ -30,7 +28,7 @@ void Router::registerRoute(const std::string &path, const std::string &method, R
 
 }
 
-HandlerReturn Router::getHandler(const std::string &method, const std::string &path) {
+HandlerReturn Router::getHandler(const std::string &method, const std::string &path) const {
 
     HandlerReturn retVal;
     // 尝试静态路由匹配

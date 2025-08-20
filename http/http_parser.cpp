@@ -11,7 +11,7 @@ void trim_(std::string &str) {
 }
 HttpParser::HttpParser() {
     parse_state_ = REQUEST_LINE;
-    request_.init();
+    request_.clear();
 }
 
 bool HttpParser::parse(Buffer &buffer) {
@@ -53,7 +53,7 @@ bool HttpParser::parse(Buffer &buffer) {
 
 void HttpParser::reset() {
     parse_state_ = REQUEST_LINE;
-    request_.init();
+    request_.clear();
 }
 
 const Request& HttpParser::getRequest() {

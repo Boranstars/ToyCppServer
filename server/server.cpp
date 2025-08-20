@@ -1,5 +1,6 @@
 #include "server.h"
 #include "router.h"
+#include "http_connection.h"
 #define PORT 11451
 
 int main() {
@@ -69,6 +70,11 @@ int main() {
         res.body = req.headers["User-Agent"];
     });
 
+    router.get("/ys",[](Request& req, Response& res) {
+        res.status = 302;
+        res.headers["Location"] = "https://www.yuanshen.com/";
+
+    });
 
 
     std::cout << "Waiting for a client to connect...\n";
@@ -83,68 +89,76 @@ int main() {
         std::cout << "Client connected\n";
         std::cout << std::endl << "Client : " << inet_ntoa(client_addr.sin_addr) << ":" << ntohs(client_addr.sin_port) << std::endl;
 
-        Buffer recv_buffer;
-        std::vector<char> temp_buffer(BUFSIZE);
-        Request request;
-
-        ssize_t recv_size = recv(client_fd, temp_buffer.data(), BUFSIZE, 0);
-        if (recv_size > 0) {
-            temp_buffer.resize(recv_size);
-            recv_buffer.append(temp_buffer);
-            HttpParser parser;
-            if (parser.parse(recv_buffer)) {
-                request = parser.getRequest();
-                parser.reset();
-                std::cout << "Method: " << request.method << "\n"
-            << "URI: " << request.uri << "\n"
-            << "Body: " << request.body << std::endl;
-                HandlerReturn result = router.getHandler(request.method, request.uri);
-                if (result.success) {
-                    Response response;
-                    if (!result.params.empty()) {
-                        request.params = result.params;
-                    }
-                    result.handler(request, response);
-                    std::string response_string = response.generateResponse();
-                    std::cout << response_string << std::endl;
-                    send(client_fd, response_string.c_str(), response_string.size(), 0);
-
-                } else {
-                    Response response;
-                    response.status = 404;
-                    response.headers["Content-Type"] = "text/html";
-                    response.headers["Server"] = "Toy Tcp Server/0.1";
-                    response.body = "<html> \
-                                       <h1>404 Not Found</h1> \
-                                        <hr> \
-                                        <center>Toy Cpp Server</center> ";
-                    std::string response_string = response.generateResponse();
-                    std::cout << response_string << std::endl;
-                    send(client_fd, response_string.c_str(), response_string.size(), 0);
-                }
-            }
-
-        } else {
-            close(client_fd);
-            std::cerr << "Client disconnected\n";
-            continue;
-        }
-        // Response response;
-        // response.status = 200;
-        // response.headers["Content-Type"] = "text/html";
-        // response.headers["Server"] = "Toy Tcp Server/0.1";
-        // response.body = "<html> \
-        //      <head><title>Toy Cpp Server</title></head> \
-        //      <body> \
-        //     <center><h1>Toy Cpp Server</h1></center> \
-        //      <hr><center>BoranStars</center> \
-        //      </body> \
-        //      </html>";
+        // HttpConnection connection(client_fd,router);
+        // connection.process();
+        std::thread([client_fd, &router]() {
+            HttpConnection connection(client_fd, router);
+            connection.process();
+        }).detach();
 
 
-
-        close(client_fd);
-        std::cout << "Client disconnected\n";
+        // Buffer recv_buffer;
+        // std::vector<char> temp_buffer(BUFSIZE);
+        // Request request;
+        //
+        // ssize_t recv_size = recv(client_fd, temp_buffer.data(), BUFSIZE, 0);
+        // if (recv_size > 0) {
+        //     temp_buffer.resize(recv_size);
+        //     recv_buffer.append(temp_buffer);
+        //     HttpParser parser;
+        //     if (parser.parse(recv_buffer)) {
+        //         request = parser.getRequest();
+        //         parser.reset();
+        //         std::cout << "Method: " << request.method << "\n"
+        //     << "URI: " << request.uri << "\n"
+        //     << "Body: " << request.body << std::endl;
+        //         HandlerReturn result = router.getHandler(request.method, request.uri);
+        //         if (result.success) {
+        //             Response response;
+        //             if (!result.params.empty()) {
+        //                 request.params = result.params;
+        //             }
+        //             result.handler(request, response);
+        //             std::string response_string = response.generateResponse();
+        //             std::cout << response_string << std::endl;
+        //             send(client_fd, response_string.c_str(), response_string.size(), 0);
+        //
+        //         } else {
+        //             Response response;
+        //             response.status = 404;
+        //             response.headers["Content-Type"] = "text/html";
+        //             response.headers["Server"] = "Toy Tcp Server/0.1";
+        //             response.body = "<html> \
+        //                                <h1>404 Not Found</h1> \
+        //                                 <hr> \
+        //                                 <center>Toy Cpp Server</center> ";
+        //             std::string response_string = response.generateResponse();
+        //             std::cout << response_string << std::endl;
+        //             send(client_fd, response_string.c_str(), response_string.size(), 0);
+        //         }
+        //     }
+        //
+        // } else {
+        //     close(client_fd);
+        //     std::cerr << "Client disconnected\n";
+        //     continue;
+        // }
+        // // Response response;
+        // // response.status = 200;
+        // // response.headers["Content-Type"] = "text/html";
+        // // response.headers["Server"] = "Toy Tcp Server/0.1";
+        // // response.body = "<html> \
+        // //      <head><title>Toy Cpp Server</title></head> \
+        // //      <body> \
+        // //     <center><h1>Toy Cpp Server</h1></center> \
+        // //      <hr><center>BoranStars</center> \
+        // //      </body> \
+        // //      </html>";
+        //
+        //
+        //
+        // close(client_fd);
+        // std::cout << "Client disconnected\n";
 
     }
 

@@ -15,8 +15,8 @@ add_executable(ToyCppServer server/server.cpp
         http/response.cpp
         http/response.h
         server/server.h
-        http/http_task.cpp
-        http/http_task.h)
+        http/http_connection.cpp
+        http/http_connection.h)
 target_include_directories(ToyCppServer PRIVATE server http)
 
 target_link_libraries(ToyCppServer Threads::Threads ZLIB::ZLIB)

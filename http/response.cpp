@@ -10,6 +10,7 @@ const std::map<int, std::string> Response::status_texts = {
     {201, "Created"},
     {204, "No Content"},
     {301, "Moved Permanently"},
+    {302, "Found"},
     {400, "Bad Request"},
     {401, "Unauthorized"},
     {403, "Forbidden"},
@@ -41,4 +42,10 @@ std::string Response::generateResponse() {
     oss << body;
 
     return oss.str();
+}
+
+void Response::clear() {
+    headers.clear();
+    body.clear();
+    status = 0;
 }
