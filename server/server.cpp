@@ -1,6 +1,9 @@
 #include "server.h"
 #include "router.h"
 #include "http_connection.h"
+#include "middleware.h"
+#include "router_middleware.h"
+#include "static_file_middleware.h"
 #define PORT 11451
 
 void registerRouters(Router& router) {
@@ -31,9 +34,9 @@ void registerRouters(Router& router) {
         res.body = req.headers["User-Agent"];
     });
 
-    router.get("/ys",[](Request& req, Response& res) {
+    router.get("/blog",[](Request& req, Response& res) {
         res.status = 302;
-        res.headers["Location"] = "https://www.yuanshen.com/";
+        res.headers["Location"] = "https://blog.boranstars.top/";
 
     });
 
@@ -43,11 +46,14 @@ void registerRouters(Router& router) {
         res.body = "foo/bar!";
     });
 
-    router.get("/file/:*filepath",[](Request& req, Response& res) {
-        res.status = 200;
-        res.headers["Content-Type"] = "text/plain";
-        res.body = req.params.at("filepath");
-    });
+    // router.get("/file/:*filepath",[](Request& req, Response& res) {
+    //     // res.status = 200;
+    //     // res.headers["Content-Type"] = "text/plain";
+    //     // // res.body = req.params.at("filepath");
+    //     req.uri = req.params.at("filepath");
+    //
+    //
+    // });
 
     router.get("/static/*",[](Request& req, Response& res) {
         res.status = 200;
@@ -97,6 +103,12 @@ int main() {
 
     Router router;
     registerRouters(router);
+    std::shared_ptr<Middleware> middleware;
+    auto static_file_middleware = std::make_shared<StaticFileMiddleware>("/Users/boran/CLionProjects/ToyCppServer/tmp");
+    auto router_middleware = std::make_shared<RouterMiddleware>(std::make_shared<Router>(router));
+
+    middleware = static_file_middleware;
+    middleware->setNext(router_middleware);
 
 
     std::cout << "Waiting for a client to connect...\n";
@@ -113,8 +125,8 @@ int main() {
 
         // HttpConnection connection(client_fd,router);
         // connection.process();
-        std::thread([client_fd, &router]() {
-            HttpConnection connection(client_fd, router);
+        std::thread([client_fd, &middleware]() {
+            HttpConnection connection(client_fd, middleware);
             connection.process();
         }).detach();
 

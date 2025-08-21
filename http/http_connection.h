@@ -11,9 +11,14 @@
 #include <sys/socket.h>
 #include <netdb.h>
 #include <unistd.h>
+
+
+class Middleware;
+
 class HttpConnection {
 public:
-    HttpConnection(int client_fd,const Router & router);
+
+    HttpConnection(int client_fd, std::shared_ptr<Middleware> middleware);
     HttpConnection(const HttpConnection &) = delete;
     HttpConnection &operator=(const HttpConnection &) = delete;
     HttpConnection& operator=(HttpConnection&&) = delete;
@@ -23,10 +28,11 @@ public:
     void close_connection();
 private:
     int client_fd_;
-    const Router& router_;
+
     Buffer read_buffer_;
     Buffer write_buffer_;
     Request request_;
+    std::shared_ptr<Middleware> middlewareChain_;
     Response response_;
     HttpParser parser_;
     bool isClosed_ = false;

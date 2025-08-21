@@ -4,20 +4,22 @@
 
 #ifndef TOYCPPSERVER_MIDDLEWARE_H
 #define TOYCPPSERVER_MIDDLEWARE_H
+#include <memory>
 #include <utility>
 
-#include "response.h"
-#include "http_parser.h"
 
-class MiddleWare {
+struct Request;
+struct Response;
+
+class Middleware {
 public:
-    virtual ~MiddleWare() = default;
+    virtual ~Middleware() = default;
 
     // 处理请求，如果返回true表示已处理请求，不再传递给下一个中间件
     virtual bool process(Request& req, Response& res) = 0;
 
     // 设置下一个中间件
-    virtual void setNext(std::shared_ptr<MiddleWare> next) {
+    virtual void setNext(std::shared_ptr<Middleware> next) {
         this->next_ = std::move(next);
     }
 
@@ -29,7 +31,7 @@ public:
         return false;
     };
 protected:
-    std::shared_ptr<MiddleWare> next_;
+    std::shared_ptr<Middleware> next_;
 };
 
 

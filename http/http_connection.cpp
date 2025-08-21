@@ -5,16 +5,24 @@
 #include "http_connection.h"
 
 #include <iostream>
+#include <utility>
+
+#include "middleware.h"
 
 
-HttpConnection::HttpConnection(int client_fd, const Router &router) :client_fd_(client_fd),router_(router){
+
+
+HttpConnection::HttpConnection(int client_fd, std::shared_ptr<Middleware> middleware):client_fd_(client_fd),middlewareChain_(std::move(middleware)) {
 }
 
 HttpConnection::HttpConnection(HttpConnection &&other) noexcept:
     client_fd_(other.client_fd_),
-    router_(other.router_),
     read_buffer_(std::move(other.read_buffer_)),
     write_buffer_(std::move(other.write_buffer_)),
+    middlewareChain_(std::move(other.middlewareChain_)),
+    request_(std::move(other.request_)),
+    response_(std::move(other.response_)),
+    parser_(other.parser_),
     isClosed_(other.isClosed_),
     isKeepAlive_(other.isKeepAlive_)
 {
@@ -48,15 +56,21 @@ void HttpConnection::process() {
             << "URI: " << request_.uri << "\n"
             << "Body: " << request_.body << std::endl;
 
-        // 获取Handler
-        HandlerReturn result = router_.getHandler(request_.method, request_.uri);
-        if (result.success) {
-            if (!result.params.empty()) {
-                request_.params = result.params;
-            }
-            // 执行
-            result.handler(request_,response_);
+        // // 获取Handler
+        // HandlerReturn result = router_.getHandler(request_.method, request_.uri);
+        // if (result.success) {
+        //     if (!result.params.empty()) {
+        //         request_.params = result.params;
+        //     }
+        //     // 执行
+        //     result.handler(request_,response_);
+        // }
+        if (!middlewareChain_ || !middlewareChain_->process(request_, response_)) {
+            response_.status = 404;
+            response_.body = "404 Not Found";
+            response_.headers["Content-Type"] = "text/plain";
         }
+
         std::string response_string = response_.generateResponse();
         std::cout << response_string << std::endl;
         ssize_t sent =  send(client_fd_, response_string.c_str(), response_string.size(), 0);

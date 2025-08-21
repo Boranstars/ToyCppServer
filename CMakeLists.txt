@@ -17,9 +17,13 @@ add_executable(ToyCppServer server/server.cpp
         server/server.h
         http/http_connection.cpp
         http/http_connection.h
-        http/middleWare.cpp
-        http/middleWare.h)
-target_include_directories(ToyCppServer PRIVATE server http)
+        middlewares/Middleware.cpp
+        middlewares/Middleware.h
+        middlewares/static_file_middleware.cpp
+        middlewares/static_file_middleware.h
+        middlewares/router_middleware.cpp
+        middlewares/router_middleware.h)
+target_include_directories(ToyCppServer PRIVATE server http middlewares)
 
 target_link_libraries(ToyCppServer Threads::Threads ZLIB::ZLIB)
 add_subdirectory(tests)

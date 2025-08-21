@@ -6,6 +6,7 @@
 TODO LIST
 - [x] 基础http报文解析
 - [x] 动态路由注册
+- [x] 文件加载
 - [ ] 线程池并发支持
 - [ ] epoll多路复用机制
 - [ ] Keep-Alive支持

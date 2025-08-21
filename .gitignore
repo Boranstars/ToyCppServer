@@ -47,6 +47,7 @@ _deps
 
 build/
 vcpkg_installed
+tmp
 
 #idea
 .idea
